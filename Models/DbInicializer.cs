@@ -13,10 +13,7 @@
                     new Client { Email = "ejemplo2@otroejemplo.com", FirstName="404NotFound", LastName="Non Existent", Password="@!123"},
                     new Client { Email = "elchompi@hotmail.com", FirstName="El Chompiras", LastName="Esposito", Password="elchavo"}
                 };
-
                 context.Clients.AddRange(clients);
-
-                //guardamos
                 context.SaveChanges();
             }
 

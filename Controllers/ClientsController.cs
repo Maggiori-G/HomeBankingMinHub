@@ -6,26 +6,27 @@ using System.Collections.Generic;
 using System.Linq;
 using HomeBankingMinHub.Repositories;
 using HomeBankingMinHub.Models;
+using HomeBankingMinHub.DTOs;
 
 namespace HomeBankingMinHub.Controllers
 {
-	[Route("api/[controller]")]
+    [Route("api/[controller]")]
 	[ApiController]
 	public class ClientsController:ControllerBase
 	{
-		private IClientRepository clientRepository;
+		private IClientRepository _clientRepository;
 
         public ClientsController(IClientRepository clientRepository)
         {
-			this.clientRepository = clientRepository;		
+			_clientRepository = clientRepository;
         }
 
 		[HttpGet]
-		public IActionResult Get() 
+		public IActionResult Get()
 		{
 			try
 			{
-				var clients = this.clientRepository.GetAllClients();
+				var clients = _clientRepository.GetAllClients();
 				var clientsDTO = new List<ClientDTO>();
 
 				foreach (Client client in clients)
@@ -38,15 +39,10 @@ namespace HomeBankingMinHub.Controllers
 						LastName = client.LastName,
 						Accounts = client.Accounts.Select(ac=> new AccountDTO
                         {
-
                             Id = ac.Id,
-
                             Balance = ac.Balance,
-
                             CreationDate = ac.CreationDate,
-
                             Number = ac.Number
-
                         }).ToList()
 
                     };
@@ -65,7 +61,7 @@ namespace HomeBankingMinHub.Controllers
 		{
 			try
 			{
-				var client = clientRepository.FindById(id);
+				var client = _clientRepository.FindById(id);
                 if (client == null)
                 {
                     return Forbid();
