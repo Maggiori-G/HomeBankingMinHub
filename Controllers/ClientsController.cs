@@ -88,5 +88,31 @@ namespace HomeBankingMinHub.Controllers
 				return StatusCode(500, ex.Message);
 			}
 		}
-    }
+
+		[HttpPost]
+		public IActionResult Post([FromBody] FormClientDTO formClientDTO)
+		{
+			try
+			{
+				if(_clientRepository.FindByEmail(formClientDTO.Email) == null)
+				{
+					return Forbid();
+				}
+
+				var client = new Client
+				{
+					Email = formClientDTO.Email,
+					FirstName = formClientDTO.FirstName,
+					LastName = formClientDTO.LastName,
+					Password = formClientDTO.Email + "pass" + formClientDTO.FirstName,
+				};
+				_clientRepository.Save(client);
+				return Ok(client);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, ex.Message);
+			}
+		}
+	}
 }
