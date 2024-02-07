@@ -10,11 +10,11 @@ namespace HomeBankingMinHub.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class AccountController:ControllerBase
+	public class AccountsController:ControllerBase
 	{
 		private IAccountRepository _accountRepository;
 
-		public AccountController(IAccountRepository accountRepository)
+		public AccountsController(IAccountRepository accountRepository)
         {
 			_accountRepository = accountRepository;
         }
