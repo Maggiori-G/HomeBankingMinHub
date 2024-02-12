@@ -39,7 +39,7 @@ namespace HomeBankingMinHub.Controllers
                         {
                             Id = transaction.Id,
                             Type = transaction.Type,
-                            Ammount = transaction.Ammount,
+                            Amount = transaction.Amount,
                             Description = transaction.Description,
 							Date = transaction.Date,
 							Account = transaction.Account,
@@ -76,7 +76,7 @@ namespace HomeBankingMinHub.Controllers
                     {
                         Id = ac.Id,
                         Type = ac.Type,
-                        Ammount = ac.Ammount,
+                        Amount = ac.Amount,
                         Description = ac.Description,
 						Date = ac.Date,
 						Account = ac.Account,
