@@ -19,5 +19,16 @@ namespace HomeBankingMinHub.Utils
                 return builder.ToString();
             }
         }
+
+        public static string GeneradorDeNumerosParaCuentas()
+        {
+            string vin = "VIN-";
+            Random random = new Random();
+
+            long numeroDeCuenta = random.Next(0,99999999);
+
+            return vin + numeroDeCuenta.ToString();
+        }
 	}
+
 }

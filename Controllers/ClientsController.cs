@@ -17,11 +17,89 @@ namespace HomeBankingMinHub.Controllers
 	public class ClientsController:ControllerBase
 	{
 		private IClientRepository _clientRepository;
+        private IAccountRepository _accountRepository;
+        private ICardRepository _cardRepository;
 
-        public ClientsController(IClientRepository clientRepository)
+        public ClientsController(IClientRepository clientRepository, IAccountRepository accountRepository, ICardRepository cardRepository)
         {
 			_clientRepository = clientRepository;
+            _accountRepository = accountRepository;
+            _cardRepository = cardRepository;
         }
+
+        [HttpPost("current/cards")]
+        public IActionResult CreateCard([FromBody] CreateCardDTO createCardDTO)
+        {
+            try
+            {
+                Client client = _clientRepository.FindByEmail(User.FindFirst("Client").Value);
+                if (client == null)
+                {
+                    return StatusCode(404, "Cliente no encontrado");
+                }
+
+                Card newCard = new Card
+                {
+                    CardHolder = $"{client.FirstName} {client.LastName }",
+                    ClientId = client.Id,
+                    FromDate = DateTime.Now,
+                    ThruDate = DateTime.Now.AddYears(6),
+                    Type = (CardType)Enum.Parse(typeof(CardType), createCardDTO.Type),
+                    Color = (CardColor)Enum.Parse(typeof(CardColor), createCardDTO.Color),
+                    Number=CardUtils.GenerateRandomNumber(16),
+                    Cvv=int.Parse(CardUtils.GenerateRandomNumber(3))
+                };
+
+                _cardRepository.Save(newCard);
+
+                return StatusCode(200, newCard);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("current/accounts")]
+		public IActionResult CreateAccount()
+		{
+			try
+			{
+				string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty) 
+                { 
+                    return StatusCode(401, "Email vacio");
+                }
+
+				Client client = _clientRepository.FindByEmail(email);
+
+                if (client == null)
+                {
+                    return StatusCode(404, "Cliente no encontrado");
+                }
+
+				if(client.Accounts.Count > 3)
+				{
+					return StatusCode(403, "Maximo de cuentas alcanzado");
+				}
+
+				Account account = new Account
+				{
+					Number = ClientUtils.GeneradorDeNumerosParaCuentas(),
+					CreationDate = DateTime.Now,
+					Balance = 0,
+					ClientId = client.Id,
+				};
+
+				_accountRepository.Save(account);
+                //client.Accounts.Add(account);
+                return StatusCode(201, "Cuenta creada con exito");
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, ex.Message);
+			}
+		}
 
 		[HttpGet]
 		public IActionResult Get()
@@ -102,12 +180,12 @@ namespace HomeBankingMinHub.Controllers
                     {
                         Id = c.Id,
                         CardHolder= c.CardHolder,
-                        Color= c.Color,
+                        Color= c.Color.ToString(),
                         Cvv= c.Cvv,
                         FromDate= c.FromDate,
                         Number= c.Number,
                         ThruDate= c.ThruDate,
-                        Type = c.Type
+                        Type = c.Type.ToString()
                     }).ToList()
                 };
 				return Ok(clientDTO);
@@ -191,12 +269,12 @@ namespace HomeBankingMinHub.Controllers
                     {
                         Id = c.Id,
                         CardHolder = c.CardHolder,
-                        Color = c.Color,
+                        Color = c.Color.ToString(),
                         Cvv = c.Cvv,
                         FromDate = c.FromDate,
                         Number = c.Number,
                         ThruDate = c.ThruDate,
-                        Type = c.Type
+                        Type = c.Type.ToString()
                     }).ToList()
                 };
 
@@ -208,7 +286,7 @@ namespace HomeBankingMinHub.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("manager")]
         public IActionResult Post([FromBody] Client client)
         {
             try

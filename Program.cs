@@ -21,6 +21,7 @@ builder.Services.AddDbContext<HomeBankingContext>(options => options.UseSqlServe
 
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<ICardRepository, CardRepository>();
 
 //autentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>{

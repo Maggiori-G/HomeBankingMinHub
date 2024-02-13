@@ -2,6 +2,7 @@
 using HomeBankingMinHub.DTOs;
 using HomeBankingMinHub.Models;
 using HomeBankingMinHub.Repositories;
+using HomeBankingMinHub.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -13,6 +14,7 @@ namespace HomeBankingMinHub.Controllers
 	public class AccountsController:ControllerBase
 	{
 		private IAccountRepository _accountRepository;
+		
 
 		public AccountsController(IAccountRepository accountRepository)
         {
@@ -38,7 +40,7 @@ namespace HomeBankingMinHub.Controllers
 						Transactions = account.Transactions.Select(transaction=> new TransactionDTO
                         {
                             Id = transaction.Id,
-                            Type = transaction.Type,
+                            Type = transaction.Type.ToString(),
                             Amount = transaction.Amount,
                             Description = transaction.Description,
 							Date = transaction.Date,
@@ -75,7 +77,7 @@ namespace HomeBankingMinHub.Controllers
                     Transactions = account.Transactions.Select(ac => new TransactionDTO
                     {
                         Id = ac.Id,
-                        Type = ac.Type,
+                        Type = ac.Type.ToString(),
                         Amount = ac.Amount,
                         Description = ac.Description,
 						Date = ac.Date,
