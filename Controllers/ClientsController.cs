@@ -8,6 +8,7 @@ using HomeBankingMinHub.Repositories;
 using HomeBankingMinHub.Models;
 using HomeBankingMinHub.DTOs;
 using HomeBankingMindHub.dtos;
+using HomeBankingMinHub.Utils;
 
 namespace HomeBankingMinHub.Controllers
 {
@@ -225,7 +226,7 @@ namespace HomeBankingMinHub.Controllers
                 Client newClient = new Client
                 {
                     Email = client.Email,
-                    Password = client.Password,
+                    Password = ClientUtils.HashPassword(client.Password),
                     FirstName = client.FirstName,
                     LastName = client.LastName,
                 };

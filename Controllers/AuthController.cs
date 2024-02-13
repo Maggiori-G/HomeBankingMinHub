@@ -13,6 +13,7 @@ using HomeBankingMindHub.dtos;
 using HomeBankingMinHub.Repositories;
 using HomeBankingMinHub.Models;
 using HomeBankingMinHub.DTOs;
+using HomeBankingMinHub.Utils;
 namespace HomeBankingMinHub.Controllers
 {
 	[Route("api/[controller]")]
@@ -31,7 +32,7 @@ namespace HomeBankingMinHub.Controllers
             try
             {
                 Client user = _clientRepository.FindByEmail(cl.Email);
-                if ((String.IsNullOrEmpty(cl.Email) && String.IsNullOrEmpty(cl.Password)) || user == null || !String.Equals(user.Password,cl.Password)) 
+                if ((String.IsNullOrEmpty(cl.Email) && String.IsNullOrEmpty(cl.Password)) || user == null || !String.Equals(ClientUtils.HashPassword(user.Password),ClientUtils.HashPassword(user.Password))) 
                 {
                     return Unauthorized();
                 }
