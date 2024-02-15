@@ -60,6 +60,12 @@ namespace HomeBankingMinHub.Controllers
             }
         }
 
+        [HttpGet("current/accounts")]
+        public IActionResult GetAccount()
+        {
+            return StatusCode(200, "Hola");
+        }
+
         [HttpPost("current/accounts")]
 		public IActionResult CreateAccount()
 		{
