@@ -53,7 +53,7 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid("No se permite la transferencia a la misma cuenta.");
                 }
 
-                if (transferDTO.Amount == 0 || transferDTO.Description == string.Empty)
+                if (transferDTO.Amount < 0 || transferDTO.Description == string.Empty)
                 {
                     return Forbid("Monto o descripción no proporcionados.");
                 }

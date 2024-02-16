@@ -130,7 +130,7 @@
                             CardHolder = client1.FirstName + " " + client1.LastName,
                             Type = CardType.CREDIT,
                             Color = CardColor.TITANIUM,
-                            Number = "2234-6745-552-7888",
+                            Number = "2234-6745-5528-7888",
                             Cvv = 750,
                             FromDate= DateTime.Now,
                             ThruDate= DateTime.Now.AddYears(5),

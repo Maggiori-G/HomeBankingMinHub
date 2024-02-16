@@ -38,9 +38,17 @@ namespace HomeBankingMinHub.Controllers
                     return StatusCode(404, "Cliente no encontrado");
                 }
 
+                foreach(Card card in client.Cards)
+                {
+                    if(createCardDTO.Type == card.Type.ToString() && createCardDTO.Color == card.Color.ToString())
+                    {
+                        return StatusCode(404, $"No permitido, ya posee una tarjeta de {createCardDTO.Type} y de color {createCardDTO.Color}");
+                    }
+                }
+
                 Card newCard = new Card
                 {
-                    CardHolder = $"{client.FirstName} {client.LastName }",
+                    CardHolder = $"{client.LastName} {client.FirstName}",
                     ClientId = client.Id,
                     FromDate = DateTime.Now,
                     ThruDate = DateTime.Now.AddYears(6),

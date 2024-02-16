@@ -11,13 +11,13 @@ namespace HomeBankingMinHub.Utils
 
 			for (int i = 0; i < lenght; i++)
 			{
-				sb.Append(random.Next(0, 9).ToString());
+				if (lenght > 4 && i % 4 == 0 && i != 0)
+				{
+					sb.Append("-");
+				}
+				sb.Append(random.Next(1, 9).ToString());
 			}
 			return sb.ToString();
 		}
-
-
 	}
-
-
 }
