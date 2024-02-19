@@ -14,18 +14,14 @@ var app = new Vue({
     },
     methods:{
         getData: function(){
-            axios.get("/api/clients/current")
+            axios.get("/api/clients/current/accounts")
             .then((response) => {
                 //get client ifo
                 this.clientAccounts = response.data;
-                console.log(response.data)
-                console.log(this.clientAccounts)
-
             })
-                .catch((error) => {
+            .catch((error) => {
                 this.errorMsg = "Error getting data";
                 this.errorToats.show();
-                
             })
         },
         formatDate: function(date){
@@ -58,7 +54,7 @@ var app = new Vue({
             }
             axios.post(`/api/transactions?
             fromAccountNumber=${this.accountFromNumber}&toAccountNumber=${this.accountToNumber}&amount=${this.amount}&description=${this.description}`,config) */
-            axios.post('/api/transactions/',
+            axios.post('/api/transactions',
                 {
                     fromAccountNumber: this.accountFromNumber,
                     toAccountNumber: this.accountToNumber,
@@ -81,7 +77,7 @@ var app = new Vue({
         },
         changedFrom: function(){
             if(this.trasnferType == "own"){
-                this.clientAccountsTo = this.clientAccounts.accounts.filter(account => account.number != this.accountFromNumber);
+                this.clientAccountsTo = this.clientAccounts.filter(account => account.number != this.accountFromNumber);
                 this.accountToNumber = "VIN";
             }
         },

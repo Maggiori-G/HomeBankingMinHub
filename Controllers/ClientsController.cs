@@ -68,11 +68,6 @@ namespace HomeBankingMinHub.Controllers
             }
         }
 
-        [HttpGet("current/accounts")]
-        public IActionResult GetAccount()
-        {
-            return StatusCode(200, "Hola");
-        }
 
         [HttpPost("current/accounts")]
 		public IActionResult CreateAccount()
@@ -114,6 +109,52 @@ namespace HomeBankingMinHub.Controllers
 				return StatusCode(500, ex.Message);
 			}
 		}
+
+        [HttpGet("current/accounts")]
+        public IActionResult GetCurrentAccount()
+        {
+            try
+            {
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty) 
+                { 
+                    return StatusCode(401, "Email vacio");
+                }
+
+				Client client = _clientRepository.FindByEmail(email);
+
+                if (client == null)
+                {
+                    return StatusCode(404, "Cliente no encontrado");
+                }
+
+                var accounts = _accountRepository.GetAccountsByClient(client.Id);
+                if (accounts == null)
+                {
+                    return StatusCode(404, "No se encontraron las cuentas de los clientes");
+                }
+
+                var accountsDTOs = new List<AccountDTO>();
+                foreach (Account ac in accounts)
+                {
+                    accountsDTOs.Add(new AccountDTO()
+                    {
+                        Balance = ac.Balance,
+                        CreationDate = ac.CreationDate,
+                        Id = ac.Id,
+                        Number = ac.Number
+                    });
+                }
+
+                return Ok(accountsDTOs);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
+        }
+
 
 		[HttpGet]
 		public IActionResult Get()
@@ -210,35 +251,6 @@ namespace HomeBankingMinHub.Controllers
 			}
 		}
 
-        /*
-            Este http post fue hecho en una tarea anterior y quedo invalidado
-        */
-
-		//[HttpPost]
-		//public IActionResult Post([FromBody] FormClientDTO formClientDTO)
-		//{
-		//	try
-		//	{
-		//		if(_clientRepository.FindByEmail(formClientDTO.Email) == null)
-		//		{
-		//			return Forbid();
-		//		}
-
-		//		var client = new Client
-		//		{
-		//			Email = formClientDTO.Email,
-		//			FirstName = formClientDTO.FirstName,
-		//			LastName = formClientDTO.LastName,
-		//			Password = formClientDTO.Email + "pass" + formClientDTO.FirstName,
-		//		};
-		//		_clientRepository.Save(client);
-		//		return Ok(client);
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		return StatusCode(500, ex.Message);
-		//	}
-		//}
 
 		[HttpGet("current")]
         public IActionResult GetCurrent()
@@ -255,7 +267,7 @@ namespace HomeBankingMinHub.Controllers
 
                 if (client == null)
                 {
-                    return Forbid();
+                    return StatusCode(404, "Cliente no encontrado");
                 }
 
                 var clientDTO = new ClientDTO

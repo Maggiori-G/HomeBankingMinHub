@@ -1,5 +1,6 @@
 ﻿using HomeBankingMindHub.Repositories;
 using HomeBankingMinHub.DTOs;
+using HomeBankingMinHub.Intefaces;
 using HomeBankingMinHub.Models;
 using HomeBankingMinHub.Repositories;
 using Microsoft.AspNetCore.Http;
@@ -15,9 +16,9 @@ namespace HomeBankingMinHub.Controllers
         private IAccountRepository _accountRepository;
         private ITransactionRepository _transactionRepository;
 		private ILoanRepository _loanRepository;
-		private IClientRepository _clientLoanRepository;
+		private IClientLoanRepository _clientLoanRepository;
 
-		public LoansController(IClientRepository clientRepository,IAccountRepository accountRepository,ITransactionRepository transactionRepository,ILoanRepository loanRepository,IClientRepository clientLoanRepository)
+		public LoansController(IClientRepository clientRepository,IAccountRepository accountRepository,ITransactionRepository transactionRepository,ILoanRepository loanRepository,IClientLoanRepository clientLoanRepository)
 		{
 			_clientRepository=clientRepository;
 			_accountRepository=accountRepository;
@@ -64,22 +65,7 @@ namespace HomeBankingMinHub.Controllers
                 {
                     return StatusCode(401, "No existe el cliente");
                 }
-                //verifica si existe el prestamo
-                var loan = _loanRepository.FindById(loanApplicationDTO.LoanId);
-                if (loan == null)
-                {
-                    return StatusCode(403, "Prestamo no encontrado");
-                }
-                //valida la cantidad minima y maxima del prestamo
-                if(loanApplicationDTO.Amount <= 100 || loanApplicationDTO.Amount > loan.MaxAmount)
-                {
-                    return StatusCode(403, $"Error, el monto minimo es de 100$ y no puede sobrepasar {loan.MaxAmount}");
-                }
-                //valida que payments no venga vacio
-                if(string.IsNullOrEmpty(loanApplicationDTO.Payments))
-                {
-                    return StatusCode(403, "Debe indicar la cantidad de cuotas");
-                }
+
                 //valida que la cuenta de destino exista
                 var account = _accountRepository.FindByNumber(loanApplicationDTO.ToAccountNumber);
 
@@ -87,12 +73,33 @@ namespace HomeBankingMinHub.Controllers
                 {
                     return StatusCode(403, "La cuenta de destino no existe");
                 }
+
+                //verifica si existe el prestamo
+                var loan = _loanRepository.FindById(loanApplicationDTO.LoanId);
+                if (loan == null)
+                {
+                    return StatusCode(403, "Prestamo no encontrado");
+                }
+
+                //valida la cantidad minima y maxima del prestamo
+                if(loanApplicationDTO.Amount <= 100 || loanApplicationDTO.Amount > loan.MaxAmount)
+                {
+                    return StatusCode(403, $"Error, el monto minimo es de 100$ y no puede sobrepasar {loan.MaxAmount}");
+                }
+
+                //valida que payments no venga vacio
+                if(string.IsNullOrEmpty(loanApplicationDTO.Payments))
+                {
+                    return StatusCode(403, "Debe indicar la cantidad de cuotas");
+                }
+                
                 //verifica que la cuenta de destino sea del cliente autenticado
                 if(account.ClientId != client.Id)
                 {
                     return StatusCode(403, "La cuenta no pertenece al cliente");
                 }
 
+                //valida que la cantidad de cuotas sea la correcta para ese prestamo
                 var loans = _loanRepository.GetAll();
                 if (loans != null) 
                 {
@@ -100,13 +107,39 @@ namespace HomeBankingMinHub.Controllers
                     {
                         if(loanDB.Id == loan.Id)
                         {
-                            if(!loanDB.Payments.Split(',').Contains(loan.Payments))
+                            if(!loanDB.Payments.Split(',').Contains(loanApplicationDTO.Payments))
                             {
                                 return StatusCode(403, "Cantidad de cuotas no permitidas");
                             }
                         }
                     }
                 }
+
+
+                var clientLoan = new ClientLoans()
+                {
+                    Amount = loanApplicationDTO.Amount * 1.20,
+                    Payments = loanApplicationDTO.Payments,
+                    ClientId = client.Id,
+                    LoanId = loanApplicationDTO.LoanId,
+                };
+
+                _clientLoanRepository.Save(clientLoan);
+
+                var transaction = new Transaction()
+                {
+                    Type = TransactionType.CREDIT,
+                    Amount = loanApplicationDTO.Amount,
+                    Description = $"{loan.Name} Loan Approved",
+                    Date = DateTime.Now,
+                    AccountId = client.Id,
+                };
+
+                _transactionRepository.Save(transaction);
+
+                account.Balance = account.Balance + loanApplicationDTO.Amount;
+                _accountRepository.Save(account);
+
 
                 return Ok(loanApplicationDTO);
             }
