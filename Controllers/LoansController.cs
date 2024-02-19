@@ -93,6 +93,20 @@ namespace HomeBankingMinHub.Controllers
                     return StatusCode(403, "La cuenta no pertenece al cliente");
                 }
 
+                var loans = _loanRepository.GetAll();
+                if (loans != null) 
+                {
+                    foreach(Loan loanDB in loans)
+                    {
+                        if(loanDB.Id == loan.Id)
+                        {
+                            if(!loanDB.Payments.Split(',').Contains(loan.Payments))
+                            {
+                                return StatusCode(403, "Cantidad de cuotas no permitidas");
+                            }
+                        }
+                    }
+                }
 
                 return Ok(loanApplicationDTO);
             }
