@@ -147,7 +147,6 @@ namespace HomeBankingMinHub.Controllers
                 { 
                     return StatusCode(401, email);
                 }
-
                 ClientDTO currentClient = _clientService.GetCurrent(email);
                 if (currentClient == null)
                 {
