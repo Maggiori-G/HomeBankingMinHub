@@ -71,31 +71,31 @@ namespace HomeBankingMinHub.Services
 			return true;
 		}
 
-		public bool GetCurrentAccounts(string email,out List<AccountDTO> clientAccounts)
-		{
-			Client client = _clientRepository.FindByEmail(email);
-			if(client==null)
-			{
-				clientAccounts=null;
-				return false;
-			}
+		//public bool GetCurrentAccounts(string email,out List<AccountDTO> clientAccounts)
+		//{
+		//	Client client = _clientRepository.FindByEmail(email);
+		//	if(client==null)
+		//	{
+		//		clientAccounts=null;
+		//		return false;
+		//	}
 
-			var accounts = _accountRepository.GetAccountsByClient(client.Id);
-			if(accounts==null)
-			{
-				clientAccounts=null;
-				return false;
-			}
+		//	var accounts = _accountRepository.GetAccountsByClient(client.Id);
+		//	if(accounts==null)
+		//	{
+		//		clientAccounts=null;
+		//		return false;
+		//	}
 
-			var accountsDTOs = new List<AccountDTO>();
-			foreach(Account ac in accounts)
-			{
-				accountsDTOs.Add(new AccountDTO(ac));
-			}
+		//	var accountsDTOs = new List<AccountDTO>();
+		//	foreach(Account ac in accounts)
+		//	{
+		//		accountsDTOs.Add(new AccountDTO(ac));
+		//	}
 
-			clientAccounts=accountsDTOs;
-			return true;
-		}
+		//	clientAccounts=accountsDTOs;
+		//	return true;
+		//}
 
 		public List<ClientDTO> GetAllClients()
 		{
@@ -144,7 +144,10 @@ namespace HomeBankingMinHub.Services
 		public ClientDTO GetCurrent(string email)
 		{
 			Client client = _clientRepository.FindByEmail(email);
-    
+			if(client == null )
+			{
+				return null;
+			}
             return new ClientDTO(client);
 		}
 	}

@@ -22,7 +22,7 @@ namespace HomeBankingMinHub.DTOs
             Number = account.Number;
             CreationDate = account.CreationDate;
             Balance = account.Balance;
-            Transactions = account.Transactions.Select(account => new TransactionDTO(account)).ToList();
+            Transactions = account.Transactions.Select(ac => new TransactionDTO(ac)).ToList();
         }
     }
 

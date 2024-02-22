@@ -9,7 +9,7 @@ namespace HomeBankingMinHub.DTOs
         public double Amount { get; set; }
         public string Description { get; set; }
         public DateTime Date { get; set; }
-        public Account Account { get; set; }
+        //public Account Account { get; set; }
 
         public TransactionDTO(Transaction transaction)
         {
@@ -18,7 +18,7 @@ namespace HomeBankingMinHub.DTOs
             Amount = transaction.Amount;
             Description = transaction.Description;
 			Date = transaction.Date;
-			Account = transaction.Account;
+			//Account = transaction.Account;
         }
     }
 }

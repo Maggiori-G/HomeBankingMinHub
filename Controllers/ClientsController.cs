@@ -75,30 +75,30 @@ namespace HomeBankingMinHub.Controllers
 			}
 		}
 
-        [HttpGet("current/accounts")]
-        public IActionResult GetCurrentAccounts()
-        {
-            try
-            {
-                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
-                if (email == string.Empty) 
-                { 
-                    return StatusCode(401, "Email vacio");
-                }
-                List<AccountDTO> clientAccounts = null;
-                if(!_clientService.GetCurrentAccounts(email, out clientAccounts))
-                {
-                    return StatusCode(404, "Cliente no encontrado o cuentas inexistentes");
-                }
+        //[HttpGet("current/accounts")]
+        //public IActionResult GetCurrentAccounts()
+        //{
+        //    try
+        //    {
+        //        string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+        //        if (email == string.Empty) 
+        //        { 
+        //            return StatusCode(401, "Email vacio");
+        //        }
+        //        List<AccountDTO> clientAccounts = null;
+        //        if(!_clientService.GetCurrentAccounts(email,out clientAccounts))
+        //        {
+        //            return StatusCode(404,"Cliente no encontrado o cuentas inexistentes");
+        //        }
 
-                return StatusCode(200, clientAccounts);
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+        //        return StatusCode(200, clientAccounts);
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        return StatusCode(500, ex.Message);
+        //    }
 
-        }
+        //}
 
 		[HttpGet]
 		public IActionResult GetAllClients()

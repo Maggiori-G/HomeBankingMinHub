@@ -11,7 +11,7 @@ namespace HomeBankingMinHub.Services
 		public ClientDTO GetClientById(long id);
 		public ClientDTO GetCurrent(string email);
 		public bool CreateClient(Client client, out Client createdClient);
-		public bool GetCurrentAccounts(string email, out List<AccountDTO> clientAccounts);
+		//public bool GetCurrentAccounts(string email, out List<AccountDTO> clientAccounts);
 
 
 	}
