@@ -48,7 +48,7 @@ namespace HomeBankingMinHub.Controllers
 
                 Card newCard = new Card
                 {
-                    CardHolder = $"{client.LastName} {client.FirstName}",
+                    CardHolder = $"{client.FirstName} {client.LastName}",
                     ClientId = client.Id,
                     FromDate = DateTime.Now,
                     ThruDate = DateTime.Now.AddYears(6),

@@ -132,7 +132,7 @@ namespace HomeBankingMinHub.Controllers
                     Amount = loanApplicationDTO.Amount,
                     Description = $"{loan.Name} Loan Approved",
                     Date = DateTime.Now,
-                    AccountId = client.Id,
+                    AccountId = account.Id,
                 };
 
                 _transactionRepository.Save(transaction);

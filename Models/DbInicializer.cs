@@ -1,4 +1,6 @@
-﻿namespace HomeBankingMinHub.Models
+﻿using HomeBankingMinHub.Utils;
+
+namespace HomeBankingMinHub.Models
 {
 	public class DBInitializer
     {
@@ -8,10 +10,10 @@
             {
                 var clients = new Client[]
                 {
-                    new Client { Email = "vcoronado@gmail.com", FirstName="Victor", LastName="Coronado", Password="123456"},
-                    new Client { Email = "tanito@ejemplo.com", FirstName="Gianni", LastName="Maggiori", Password="@12345"},
-                    new Client { Email = "ejemplo2@otroejemplo.com", FirstName="404NotFound", LastName="Non Existent", Password="@!123"},
-                    new Client { Email = "elchompi@hotmail.com", FirstName="El Chompiras", LastName="Esposito", Password="elchavo"}
+                    new Client { Email = "vcoronado@gmail.com", FirstName="Victor", LastName="Coronado", Password=ClientUtils.HashPassword("123456")},
+                    new Client { Email = "tanito@ejemplo.com", FirstName="Gianni", LastName="Maggiori" ,Password=ClientUtils.HashPassword("123456")},
+                    new Client { Email = "ejemplo2@otroejemplo.com", FirstName="404NotFound", LastName="Non Existent", Password=ClientUtils.HashPassword("@123456")},
+                    new Client { Email = "elchompi@hotmail.com", FirstName="El Chompiras", LastName="Esposito", Password=ClientUtils.HashPassword("123456")}
                 };
                 context.Clients.AddRange(clients);
                 context.SaveChanges();
@@ -24,7 +26,7 @@
                 {
                     var accounts = new Account[]
                     {
-                        new Account {ClientId = accountVictor.Id, CreationDate = DateTime.Now, Number = string.Empty, Balance = 0 }
+                        new Account {ClientId = accountVictor.Id, CreationDate = DateTime.Now, Number = "VIN001", Balance = 0 }
                     };
                     context.Accounts.AddRange(accounts);
                     context.SaveChanges();
