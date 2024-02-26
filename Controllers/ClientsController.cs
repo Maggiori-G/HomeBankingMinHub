@@ -9,6 +9,7 @@ using HomeBankingMinHub.Models;
 using HomeBankingMinHub.DTOs;
 using HomeBankingMindHub.dtos;
 using HomeBankingMinHub.Utils;
+using HomeBankingMinHub.Services;
 
 namespace HomeBankingMinHub.Controllers
 {
@@ -19,12 +20,13 @@ namespace HomeBankingMinHub.Controllers
 		private IClientRepository _clientRepository;
         private IAccountRepository _accountRepository;
         private ICardRepository _cardRepository;
-
-        public ClientsController(IClientRepository clientRepository, IAccountRepository accountRepository, ICardRepository cardRepository)
+        private readonly IClientService _clientService;
+        public ClientsController(IClientRepository clientRepository, IAccountRepository accountRepository, ICardRepository cardRepository, IClientService clientService)
         {
 			_clientRepository = clientRepository;
             _accountRepository = accountRepository;
             _cardRepository = cardRepository;
+            _clientService = clientService;
         }
 
         [HttpPost("current/cards")]
@@ -32,35 +34,21 @@ namespace HomeBankingMinHub.Controllers
         {
             try
             {
-                Client client = _clientRepository.FindByEmail(User.FindFirst("Client").Value);
-                if (client == null)
-                {
-                    return StatusCode(404, "Cliente no encontrado");
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty) 
+                { 
+                    return StatusCode(401, "Email vacio");
                 }
 
-                foreach(Card card in client.Cards)
+                string response = _clientService.CreateClientCard(email, createCardDTO);
+                if(response.Equals("Tarjeta creada con éxito"))
                 {
-                    if(createCardDTO.Type == card.Type.ToString() && createCardDTO.Color == card.Color.ToString())
-                    {
-                        return StatusCode(404, $"No permitido, ya posee una tarjeta de {createCardDTO.Type} y de color {createCardDTO.Color}");
-                    }
+                    return StatusCode(200, response);
                 }
-
-                Card newCard = new Card
+                else
                 {
-                    CardHolder = $"{client.FirstName} {client.LastName}",
-                    ClientId = client.Id,
-                    FromDate = DateTime.Now,
-                    ThruDate = DateTime.Now.AddYears(6),
-                    Type = (CardType)Enum.Parse(typeof(CardType), createCardDTO.Type),
-                    Color = (CardColor)Enum.Parse(typeof(CardColor), createCardDTO.Color),
-                    Number=CardUtils.GenerateRandomNumber(16),
-                    Cvv=int.Parse(CardUtils.GenerateRandomNumber(3))
-                };
-
-                _cardRepository.Save(newCard);
-
-                return StatusCode(200, newCard);
+                    return StatusCode(401, response);
+                }
             }
             catch (Exception ex)
             {
@@ -80,29 +68,15 @@ namespace HomeBankingMinHub.Controllers
                     return StatusCode(401, "Email vacio");
                 }
 
-				Client client = _clientRepository.FindByEmail(email);
-
-                if (client == null)
+                string response = _clientService.CreateAccount(email);
+                if(response.Equals("Cuenta creada con éxito"))
                 {
-                    return StatusCode(404, "Cliente no encontrado");
+                    return StatusCode(200, response);
                 }
-
-				if(client.Accounts.Count > 3)
-				{
-					return StatusCode(403, "Maximo de cuentas alcanzado");
-				}
-
-				Account account = new Account
-				{
-					Number = ClientUtils.GeneradorDeNumerosParaCuentas(),
-					CreationDate = DateTime.Now,
-					Balance = 0,
-					ClientId = client.Id,
-				};
-
-				_accountRepository.Save(account);
-                //client.Accounts.Add(account);
-                return StatusCode(201, "Cuenta creada con exito");
+                else
+                {
+                    return StatusCode(401, response);
+                }
 			}
 			catch (Exception ex)
 			{
@@ -121,32 +95,12 @@ namespace HomeBankingMinHub.Controllers
                     return StatusCode(401, "Email vacio");
                 }
 
-				Client client = _clientRepository.FindByEmail(email);
-
-                if (client == null)
+				var accountsDTO = _clientService.GetCurrentAccounts(email);
+                if(accountsDTO == null)
                 {
-                    return StatusCode(404, "Cliente no encontrado");
+                    return null;
                 }
-
-                var accounts = _accountRepository.GetAccountsByClient(client.Id);
-                if (accounts == null)
-                {
-                    return StatusCode(404, "No se encontraron las cuentas de los clientes");
-                }
-
-                var accountsDTOs = new List<AccountDTO>();
-                foreach (Account ac in accounts)
-                {
-                    accountsDTOs.Add(new AccountDTO()
-                    {
-                        Balance = ac.Balance,
-                        CreationDate = ac.CreationDate,
-                        Id = ac.Id,
-                        Number = ac.Number
-                    });
-                }
-
-                return Ok(accountsDTOs);
+                return Ok(accountsDTO);
             }
             catch(Exception ex)
             {
@@ -161,37 +115,12 @@ namespace HomeBankingMinHub.Controllers
 		{
 			try
 			{
-				var clients = _clientRepository.GetAllClients();
-				var clientsDTO = new List<ClientDTO>();
-
-				foreach (Client client in clients)
-				{
-					var newClientDTO = new ClientDTO
-					{
-						Id = client.Id,
-						Email = client.Email,
-						FirstName = client.FirstName,
-						LastName = client.LastName,
-						Accounts = client.Accounts.Select(ac=> new AccountDTO
-                        {
-                            Id = ac.Id,
-                            Balance = ac.Balance,
-                            CreationDate = ac.CreationDate,
-                            Number = ac.Number
-                        }).ToList(),
-						Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-						{
-							Id = cl.Id,
-							LoanId = cl.LoanId,
-							Name = cl.Loan.Name,
-							Amount = cl.Amount,
-							Payments = int.Parse(cl.Payments)
-						}).ToList()
-
-                    };
-					clientsDTO.Add(newClientDTO);
-				}
-				return Ok(clientsDTO);
+				var clientsDTO = _clientService.GetAllClients();
+                if (clientsDTO ==null)
+                {
+                    return StatusCode(404, "No se encontro la lista de clientes");
+                }
+				return StatusCode(200, clientsDTO);
 			}	
 			catch (Exception ex)
 			{
@@ -204,46 +133,14 @@ namespace HomeBankingMinHub.Controllers
 		{
 			try
 			{
-				var client = _clientRepository.FindById(id);
-                if (client == null)
+				if(id <= 0)
                 {
-                    return Forbid();
+                    return StatusCode(400, "ID invalido");
                 }
-
-				var clientDTO = new ClientDTO
+                else
                 {
-                    Id = client.Id,
-                    Email = client.Email,
-                    FirstName = client.FirstName,
-                    LastName = client.LastName,
-                    Accounts = client.Accounts.Select(ac => new AccountDTO
-                    {
-                        Id = ac.Id,
-                        Balance = ac.Balance,
-                        CreationDate = ac.CreationDate,
-                        Number = ac.Number
-                    }).ToList(),
-					Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                    {
-                        Id = cl.Id,
-                        LoanId = cl.LoanId,
-                        Name = cl.Loan.Name,
-                        Amount = cl.Amount,
-                        Payments = int.Parse(cl.Payments)
-                    }).ToList(),
-					Cards = client.Cards.Select(c => new CardDTO
-                    {
-                        Id = c.Id,
-                        CardHolder= c.CardHolder,
-                        Color= c.Color.ToString(),
-                        Cvv= c.Cvv,
-                        FromDate= c.FromDate,
-                        Number= c.Number,
-                        ThruDate= c.ThruDate,
-                        Type = c.Type.ToString()
-                    }).ToList()
-                };
-				return Ok(clientDTO);
+                    return StatusCode(200, _clientService.GetById(id));
+                }
 			}
 			catch (Exception ex)
 			{
@@ -263,46 +160,11 @@ namespace HomeBankingMinHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
-
-                if (client == null)
+                var clientDTO = _clientService.GetCurrentClient(email);
+                if(clientDTO == null)
                 {
                     return StatusCode(404, "Cliente no encontrado");
                 }
-
-                var clientDTO = new ClientDTO
-                {
-                    Id = client.Id,
-                    Email = client.Email,
-                    FirstName = client.FirstName,
-                    LastName = client.LastName,
-                    Accounts = client.Accounts.Select(ac => new AccountDTO
-                    {
-                        Id = ac.Id,
-                        Balance = ac.Balance,
-                        CreationDate = ac.CreationDate,
-                        Number = ac.Number
-                    }).ToList(),
-                    Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                    {
-                        Id = cl.Id,
-                        LoanId = cl.LoanId,
-                        Name = cl.Loan.Name,
-                        Amount = cl.Amount,
-                        Payments = int.Parse(cl.Payments)
-                    }).ToList(),
-                    Cards = client.Cards.Select(c => new CardDTO
-                    {
-                        Id = c.Id,
-                        CardHolder = c.CardHolder,
-                        Color = c.Color.ToString(),
-                        Cvv = c.Cvv,
-                        FromDate = c.FromDate,
-                        Number = c.Number,
-                        ThruDate = c.ThruDate,
-                        Type = c.Type.ToString()
-                    }).ToList()
-                };
 
                 return Ok(clientDTO);
             }
@@ -312,30 +174,20 @@ namespace HomeBankingMinHub.Controllers
             }
         }
 
-        [HttpPost("manager")]
+        [HttpPost]
         public IActionResult Post([FromBody] Client client)
         {
             try
             {
-                if (String.IsNullOrEmpty(client.Email) || String.IsNullOrEmpty(client.Password) || String.IsNullOrEmpty(client.FirstName) ||String.IsNullOrEmpty(client.LastName))
+                string response = _clientService.CreateClient(client);
+                if(response.Equals("Cliente creado con éxito"))
                 {
-                    return StatusCode(403, "datos inválidos");
+                    return StatusCode(200, response);
                 }
-                Client user = _clientRepository.FindByEmail(client.Email);
-                if (user != null)
+                else
                 {
-                    return StatusCode(403, "Email está en uso");
+                    return StatusCode(400, response);
                 }
-
-                Client newClient = new Client
-                {
-                    Email = client.Email,
-                    Password = ClientUtils.HashPassword(client.Password),
-                    FirstName = client.FirstName,
-                    LastName = client.LastName,
-                };
-                _clientRepository.Save(newClient);
-                return Created("", newClient);
             }
             catch (Exception ex)
             {

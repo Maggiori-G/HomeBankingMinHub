@@ -1,10 +1,10 @@
-﻿using HomeBankingMindHub.Repositories;
-using HomeBankingMinHub.DTOs;
+﻿using HomeBankingMinHub.DTOs;
 using HomeBankingMinHub.Intefaces;
 using HomeBankingMinHub.Models;
-using HomeBankingMinHub.Repositories;
+using HomeBankingMinHub.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace HomeBankingMinHub.Controllers
 {
@@ -12,19 +12,10 @@ namespace HomeBankingMinHub.Controllers
 	[ApiController]
 	public class LoansController:ControllerBase
 	{
-		private IClientRepository _clientRepository;
-        private IAccountRepository _accountRepository;
-        private ITransactionRepository _transactionRepository;
-		private ILoanRepository _loanRepository;
-		private IClientLoanRepository _clientLoanRepository;
-
-		public LoansController(IClientRepository clientRepository,IAccountRepository accountRepository,ITransactionRepository transactionRepository,ILoanRepository loanRepository,IClientLoanRepository clientLoanRepository)
+        private readonly ILoansService _loansService;
+		public LoansController(ILoansService loansService)
 		{
-			_clientRepository=clientRepository;
-			_accountRepository=accountRepository;
-			_transactionRepository=transactionRepository;
-			_loanRepository=loanRepository;
-			_clientLoanRepository=clientLoanRepository;
+			_loansService = loansService;
 		}
 
 		[HttpGet]
@@ -32,14 +23,12 @@ namespace HomeBankingMinHub.Controllers
         {
             try
             {
-                var loans = _loanRepository.GetAll();
-                var loansDTO = new List<LoanDTO>();
-
-                foreach (Loan loan in loans)
+                
+                var loansDTO = _loansService.GetAllLoans();
+                if(loansDTO == null)
                 {
-                    loansDTO.Add(new LoanDTO(loan));
+                    return StatusCode(404, "No se encontraron los prestamos");
                 }
-
                 return Ok(loansDTO);
             }
             catch (Exception ex)
@@ -53,95 +42,23 @@ namespace HomeBankingMinHub.Controllers
         {
             try
             {
-                //verifica que exista el cliente
-                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
-                if (email == string.Empty)
+                string email = User.FindFirst("Client").Value;
+                if (!email.IsNullOrEmpty())
                 {
-                    return StatusCode(401, "Email vacío");
-                }
-
-                Client client = _clientRepository.FindByEmail(email);
-                if (client == null)
-                {
-                    return StatusCode(401, "No existe el cliente");
-                }
-
-                //valida que la cuenta de destino exista
-                var account = _accountRepository.FindByNumber(loanApplicationDTO.ToAccountNumber);
-
-                if (account == null)
-                {
-                    return StatusCode(403, "La cuenta de destino no existe");
-                }
-
-                //verifica si existe el prestamo
-                var loan = _loanRepository.FindById(loanApplicationDTO.LoanId);
-                if (loan == null)
-                {
-                    return StatusCode(403, "Prestamo no encontrado");
-                }
-
-                //valida la cantidad minima y maxima del prestamo
-                if(loanApplicationDTO.Amount <= 100 || loanApplicationDTO.Amount > loan.MaxAmount)
-                {
-                    return StatusCode(403, $"Error, el monto minimo es de 100$ y no puede sobrepasar {loan.MaxAmount}");
-                }
-
-                //valida que payments no venga vacio
-                if(string.IsNullOrEmpty(loanApplicationDTO.Payments))
-                {
-                    return StatusCode(403, "Debe indicar la cantidad de cuotas");
-                }
-                
-                //verifica que la cuenta de destino sea del cliente autenticado
-                if(account.ClientId != client.Id)
-                {
-                    return StatusCode(403, "La cuenta no pertenece al cliente");
-                }
-
-                //valida que la cantidad de cuotas sea la correcta para ese prestamo
-                var loans = _loanRepository.GetAll();
-                if (loans != null) 
-                {
-                    foreach(Loan loanDB in loans)
+                    string response = _loansService.CreateLoanApplication(loanApplicationDTO, email);
+                    if (response.Equals("Prestamo Aprobado"))
                     {
-                        if(loanDB.Id == loan.Id)
-                        {
-                            if(!loanDB.Payments.Split(',').Contains(loanApplicationDTO.Payments))
-                            {
-                                return StatusCode(403, "Cantidad de cuotas no permitidas");
-                            }
-                        }
+                        return StatusCode(200, response);
+                    }
+                    else
+                    {
+                        return StatusCode(403, response);
                     }
                 }
-
-
-                var clientLoan = new ClientLoans()
+                else
                 {
-                    Amount = loanApplicationDTO.Amount * 1.20,
-                    Payments = loanApplicationDTO.Payments,
-                    ClientId = client.Id,
-                    LoanId = loanApplicationDTO.LoanId,
-                };
-
-                _clientLoanRepository.Save(clientLoan);
-
-                var transaction = new Transaction()
-                {
-                    Type = TransactionType.CREDIT,
-                    Amount = loanApplicationDTO.Amount,
-                    Description = $"{loan.Name} Loan Approved",
-                    Date = DateTime.Now,
-                    AccountId = account.Id,
-                };
-
-                _transactionRepository.Save(transaction);
-
-                account.Balance = account.Balance + loanApplicationDTO.Amount;
-                _accountRepository.Save(account);
-
-
-                return Ok(loanApplicationDTO);
+                    return StatusCode(401, "No se pudo procesar el prestamo");
+                }
             }
             catch (Exception ex)
             {

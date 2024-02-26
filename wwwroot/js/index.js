@@ -52,7 +52,7 @@
         }, */
         signUp: function (event) {
             event.preventDefault();
-            axios.post('/api/clients',{
+            axios.post('/api/clients/manager',{
                 firstName: this.firstName,
                 lastName: this.lastName,
                 password: this.password,

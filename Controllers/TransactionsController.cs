@@ -2,9 +2,11 @@
 using HomeBankingMindHub.Repositories;
 using HomeBankingMinHub.Models;
 using HomeBankingMinHub.Repositories;
+using HomeBankingMinHub.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Security.Principal;
 
@@ -14,15 +16,11 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class TransactionsController : ControllerBase
     {
-        private IClientRepository _clientRepository;
-        private IAccountRepository _accountRepository;
-        private ITransactionRepository _transactionRepository;
+        private ITransactionService _transactionService;
 
-        public TransactionsController(IClientRepository clientRepository, IAccountRepository accountRepository, ITransactionRepository transactionRepository)
+        public TransactionsController(ITransactionService transactionService)
         {
-            _clientRepository = clientRepository;
-            _accountRepository = accountRepository;
-            _transactionRepository = transactionRepository;
+            _transactionService = transactionService;
         }
 
         [HttpPost]
@@ -31,77 +29,22 @@ namespace HomeBankingMindHub.Controllers
             try
             {
                 string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
-                if (email == string.Empty)
+                if (!email.IsNullOrEmpty())
                 {
-                    return Forbid("Email vacío");
+                    string response = _transactionService.GenerarTransaccion(transferDTO);
+                    if (response.Equals("Transferencia Realizada con éxito"))
+                    {
+                        return StatusCode(200, response);
+                    }
+                    else
+                    {
+                        return StatusCode(403, response);
+                    }
                 }
-
-                Client client = _clientRepository.FindByEmail(email);
-
-                if (client == null)
+                else
                 {
-                    return Forbid("No existe el cliente");
+                    return StatusCode(401, "Email vacío");
                 }
-
-                if (transferDTO.FromAccountNumber == string.Empty || transferDTO.ToAccountNumber == string.Empty)
-                {
-                    return Forbid("Cuenta de origen o cuenta de destino no proporcionada.");
-                }
-
-                if (transferDTO.FromAccountNumber == transferDTO.ToAccountNumber)
-                {
-                    return Forbid("No se permite la transferencia a la misma cuenta.");
-                }
-
-                if (transferDTO.Amount < 0 || transferDTO.Description == string.Empty)
-                {
-                    return Forbid("Monto o descripción no proporcionados.");
-                }
-
-                Account fromAccount = _accountRepository.FindByNumber(transferDTO.FromAccountNumber);
-                if (fromAccount == null)
-                {
-                    return Forbid("Cuenta de origen no existe");
-                }
-
-                if (fromAccount.Balance < transferDTO.Amount)
-                {
-                    return Forbid("Fondos insuficientes");
-                }
-
-                Account toAccount = _accountRepository.FindByNumber(transferDTO.ToAccountNumber);
-                if (toAccount == null)
-                {
-                    return Forbid("Cuenta de destino no existe");
-                }
-
-                _transactionRepository.Save(new Transaction
-                {
-                    Type = TransactionType.DEBIT,
-                    Amount = transferDTO.Amount * -1,
-                    Description= transferDTO.Description + " " + toAccount.Number,
-                    AccountId = fromAccount.Id,
-                    Date= DateTime.Now,
-                });
-
-                _transactionRepository.Save(new Transaction
-                {
-                    Type= TransactionType.CREDIT,
-                    Amount = transferDTO.Amount,
-                    Description= transferDTO.Description + " " + fromAccount.Number,
-                    AccountId = toAccount.Id,
-                    Date= DateTime.Now,
-                });
-
-                fromAccount.Balance = fromAccount.Balance - transferDTO.Amount;
-                _accountRepository.Save(fromAccount);
-
-                toAccount.Balance = toAccount.Balance + transferDTO.Amount;
-                _accountRepository.Save(toAccount);
-
-
-                return Created("Creado con exito", fromAccount);
-
             }
             catch (Exception ex)
             {
