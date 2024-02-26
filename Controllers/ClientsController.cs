@@ -17,15 +17,10 @@ namespace HomeBankingMinHub.Controllers
 	[ApiController]
 	public class ClientsController:ControllerBase
 	{
-		private IClientRepository _clientRepository;
-        private IAccountRepository _accountRepository;
-        private ICardRepository _cardRepository;
         private readonly IClientService _clientService;
-        public ClientsController(IClientRepository clientRepository, IAccountRepository accountRepository, ICardRepository cardRepository, IClientService clientService)
+
+        public ClientsController(IClientService clientService)
         {
-			_clientRepository = clientRepository;
-            _accountRepository = accountRepository;
-            _cardRepository = cardRepository;
             _clientService = clientService;
         }
 
@@ -55,7 +50,6 @@ namespace HomeBankingMinHub.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-
 
         [HttpPost("current/accounts")]
 		public IActionResult CreateAccount()

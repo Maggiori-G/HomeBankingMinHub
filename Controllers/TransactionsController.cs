@@ -16,7 +16,7 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class TransactionsController : ControllerBase
     {
-        private ITransactionService _transactionService;
+        private readonly ITransactionService _transactionService;
 
         public TransactionsController(ITransactionService transactionService)
         {
