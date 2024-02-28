@@ -5,6 +5,7 @@ namespace HomeBankingMinHub.Services
 {
 	public interface IClientService
 	{
+		public string GenerarInfoPDF(string email);
 		public string CreateClientCard(string email, CreateCardDTO createCardDTO);
 		public string CreateAccount(string email);
 		public IEnumerable<AccountDTO> GetCurrentAccounts(string email);

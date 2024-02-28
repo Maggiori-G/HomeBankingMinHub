@@ -10,6 +10,14 @@ using HomeBankingMinHub.DTOs;
 using HomeBankingMindHub.dtos;
 using HomeBankingMinHub.Utils;
 using HomeBankingMinHub.Services;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
+using System.Web;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using System.IO;
+using Azure;
+
 
 namespace HomeBankingMinHub.Controllers
 {
@@ -22,6 +30,32 @@ namespace HomeBankingMinHub.Controllers
         public ClientsController(IClientService clientService)
         {
             _clientService = clientService;
+        }
+
+        [HttpGet("current/downloads")]
+        public IActionResult GenerarPDF()
+        {
+            string email = User.FindFirst("Client")!=null ? User.FindFirst("Client").Value : string.Empty;
+            if(email==string.Empty)
+            {
+                return StatusCode(401,"Email vacio");
+            }
+            string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),"resumen.pdf");
+
+            string contenido = _clientService.GenerarInfoPDF(email);
+            if(string.IsNullOrEmpty(contenido))
+            {
+                return StatusCode(401,"No se pudo generar el resumen de cuenta");
+			}
+			using (PdfWriter writer = new PdfWriter(filePath))
+            {
+                using (PdfDocument doc = new PdfDocument(writer))
+                {
+                    Document document = new Document(doc);
+                    document.Add(new Paragraph(contenido));
+                }
+            }
+            return StatusCode(200, File(filePath,"application/pdf","resumen.pdf"));
         }
 
         [HttpPost("current/cards")]

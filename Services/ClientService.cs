@@ -3,6 +3,7 @@ using HomeBankingMinHub.DTOs;
 using HomeBankingMinHub.Models;
 using HomeBankingMinHub.Repositories;
 using HomeBankingMinHub.Utils;
+using System.Text;
 
 namespace HomeBankingMinHub.Services
 {
@@ -18,8 +19,63 @@ namespace HomeBankingMinHub.Services
             _accountRepository = accountRepository;
             _cardRepository = cardRepository;
         }
-        
-		public string CreateClientCard(string email, CreateCardDTO createCardDTO)
+
+        public string GenerarInfoPDF(string email)
+        {
+            Client client = _clientRepository.FindByEmail(email);
+            if(client==null)
+            {
+                return "Información insuficiente para generar PDF";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"TITULAR: {client.LastName} {client.FirstName}");
+            sb.AppendLine($"EMAIL: {client.Email}");
+            sb.AppendLine("");
+            sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+            sb.AppendLine($"DETALLE DE CUENTAS");
+            sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+            sb.AppendLine("");
+            foreach(Account account in client.Accounts)
+            {
+                sb.AppendLine($"CUENTA NUMERO: {account.Number}");
+                sb.AppendLine($"BALANCE: {account.Balance}");
+                sb.AppendLine($"TRANSACCIONES:");
+                sb.AppendLine("");
+                sb.AppendLine("----------------------------------------------------------------------------------------------------------------");                foreach(Transaction transaction in account.Transactions)
+                {
+                    sb.AppendLine($"FECHA: {transaction.Date}");
+                    sb.AppendLine($"TIPO: {transaction.Type.ToString()}");
+                    sb.AppendLine($"DESCRIPCION: {transaction.Description}");
+                    sb.AppendLine($"MONTO: ${transaction.Description}");
+                    sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                }
+
+                sb.AppendLine($"DETALLE DE TARJETAS");
+                sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                sb.AppendLine("");
+                foreach(Card card in client.Cards)
+                {
+                    sb.AppendLine($"NUMERO: {card.Number}");
+                    sb.AppendLine($"COLOR: {card.Color.ToString()}");
+                    sb.AppendLine($"TIPO: {card.Type.ToString()}");
+                    sb.AppendLine($"VALIDA HASTA: {card.ThruDate}");
+                    sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                }
+                sb.AppendLine($"DETALLE DE PRESTAMOS");
+                sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                foreach(ClientLoans loan in client.ClientLoans)
+                {
+                    sb.AppendLine($"TIPO DE PRESTAMO: {loan.Loan.Name}");
+                    sb.AppendLine($"MONTO: {loan.Amount}");
+                    sb.AppendLine($"CANTIDAD DE CUOTAS: {loan.Payments}");
+                    sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                }
+            }
+            return sb.ToString();
+        }
+
+        public string CreateClientCard(string email, CreateCardDTO createCardDTO)
 		{
 			Client client = _clientRepository.FindByEmail(email);
             if (client == null)

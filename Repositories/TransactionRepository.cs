@@ -22,5 +22,10 @@ namespace HomeBankingMindHub.Repositories
             Create(transaction);
             SaveChanges();
         }
+
+        //public IEnumerable<Transaction> GetAllById(long id)
+        //{
+        //    return 
+        //}
     }
 }
