@@ -17,7 +17,8 @@ using iText.Layout;
 using iText.Layout.Element;
 using System.IO;
 using Azure;
-
+using iText.Html2pdf;
+using iText.IO.Image;
 
 namespace HomeBankingMinHub.Controllers
 {
@@ -40,22 +41,35 @@ namespace HomeBankingMinHub.Controllers
             {
                 return StatusCode(401,"Email vacio");
             }
-            string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),"resumen.pdf");
+            string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),$"resumen_de_cuenta_{email}.pdf");
 
             string contenido = _clientService.GenerarInfoPDF(email);
             if(string.IsNullOrEmpty(contenido))
             {
                 return StatusCode(401,"No se pudo generar el resumen de cuenta");
 			}
-			using (PdfWriter writer = new PdfWriter(filePath))
+
+            using (FileStream pdfFile = new FileStream(filePath,FileMode.Create))
             {
-                using (PdfDocument doc = new PdfDocument(writer))
+                using (PdfWriter writer = new PdfWriter(pdfFile))
                 {
-                    Document document = new Document(doc);
-                    document.Add(new Paragraph(contenido));
+                    using (PdfDocument pdf = new PdfDocument(writer))
+                    {
+                        Document doc = new Document(pdf);
+                        string imgPath = "D:\\AccentureBC\\HomeBankingMVC\\HomeBankingMinHub\\wwwroot\\img\\logo vinotinto.png";
+                        ImageData data = ImageDataFactory.Create(imgPath);
+                        Image img = new Image(data);
+                        
+                        img.SetHeight(120);
+                        img.SetWidth(120);
+                        doc.Add(img);
+                        
+                        HtmlConverter.ConvertToPdf(contenido, pdf, new ConverterProperties());
+                        doc.Close();
+                    }
                 }
             }
-            return StatusCode(200, File(filePath,"application/pdf","resumen.pdf"));
+            return StatusCode(200, File(filePath,"application/pdf",$"resumen_de_cuenta_{email}.pdf"));
         }
 
         [HttpPost("current/cards")]

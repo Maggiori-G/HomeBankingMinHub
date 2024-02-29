@@ -5,6 +5,8 @@ using HomeBankingMinHub.Repositories;
 using HomeBankingMinHub.Utils;
 using System.Text;
 
+
+
 namespace HomeBankingMinHub.Services
 {
 	public class ClientService:IClientService
@@ -29,49 +31,49 @@ namespace HomeBankingMinHub.Services
             }
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"TITULAR: {client.LastName} {client.FirstName}");
-            sb.AppendLine($"EMAIL: {client.Email}");
-            sb.AppendLine("");
-            sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
-            sb.AppendLine($"DETALLE DE CUENTAS");
-            sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
-            sb.AppendLine("");
+            sb.AppendLine("<html><style>body{text-align: center;}</style><body>");
+            sb.AppendLine("<h1>BANCO VINOTINTO</h1>");
+            sb.AppendLine($"<h2>TITULAR: {client.LastName} {client.FirstName}</h2>");
+            sb.AppendLine($"<h2>EMAIL: {client.Email}</h2>");
+            sb.AppendLine("<hr/>");
+            sb.AppendLine("<h3>DETALLE DE CUENTAS</h3>");
+            sb.AppendLine("<hr/>");
             foreach(Account account in client.Accounts)
             {
-                sb.AppendLine($"CUENTA NUMERO: {account.Number}");
-                sb.AppendLine($"BALANCE: {account.Balance}");
-                sb.AppendLine($"TRANSACCIONES:");
-                sb.AppendLine("");
-                sb.AppendLine("----------------------------------------------------------------------------------------------------------------");                foreach(Transaction transaction in account.Transactions)
+                sb.AppendLine($"<h4>CUENTA NUMERO: {account.Number}</h4>");
+                sb.AppendLine($"<h4>BALANCE: $ {account.Balance}<h4>");
+                sb.AppendLine("<h4>TRANSACCIONES:</h4>");
+                sb.AppendLine("<hr/>");                
+                foreach(Transaction transaction in account.Transactions)
                 {
-                    sb.AppendLine($"FECHA: {transaction.Date}");
-                    sb.AppendLine($"TIPO: {transaction.Type.ToString()}");
-                    sb.AppendLine($"DESCRIPCION: {transaction.Description}");
-                    sb.AppendLine($"MONTO: ${transaction.Description}");
-                    sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                    sb.AppendLine($"<p>FECHA: {transaction.Date}</p>");
+                    sb.AppendLine($"<p>TIPO: {transaction.Type.ToString()}</p>");
+                    sb.AppendLine($"<p>DESCRIPCION: {transaction.Description}</p>");
+                    sb.AppendLine($"<p>MONTO: ${transaction.Description}</p>");
+                    sb.AppendLine("<hr/>");
                 }
 
-                sb.AppendLine($"DETALLE DE TARJETAS");
-                sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
-                sb.AppendLine("");
+                sb.AppendLine($"<h3>DETALLE DE TARJETAS</h3>");
+                sb.AppendLine("<hr/>");
                 foreach(Card card in client.Cards)
                 {
-                    sb.AppendLine($"NUMERO: {card.Number}");
-                    sb.AppendLine($"COLOR: {card.Color.ToString()}");
-                    sb.AppendLine($"TIPO: {card.Type.ToString()}");
-                    sb.AppendLine($"VALIDA HASTA: {card.ThruDate}");
-                    sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                    sb.AppendLine($"<p>NUMERO: {card.Number}</p>");
+                    sb.AppendLine($"<p>COLOR: {card.Color.ToString()}</p>");
+                    sb.AppendLine($"<p>TIPO: {card.Type.ToString()}</p>");
+                    sb.AppendLine($"<p>VALIDA HASTA: {card.ThruDate}</p>");
+                    sb.AppendLine("<hr/>");
                 }
-                sb.AppendLine($"DETALLE DE PRESTAMOS");
-                sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                sb.AppendLine($"<h3>DETALLE DE PRESTAMOS</h3>");
+                sb.AppendLine("<hr/>");
                 foreach(ClientLoans loan in client.ClientLoans)
                 {
-                    sb.AppendLine($"TIPO DE PRESTAMO: {loan.Loan.Name}");
-                    sb.AppendLine($"MONTO: {loan.Amount}");
-                    sb.AppendLine($"CANTIDAD DE CUOTAS: {loan.Payments}");
-                    sb.AppendLine("----------------------------------------------------------------------------------------------------------------");
+                    sb.AppendLine($"<p>TIPO DE PRESTAMO: {loan.Loan.Name}</p>");
+                    sb.AppendLine($"<p>MONTO: {loan.Amount}</p>");
+                    sb.AppendLine($"<p>CANTIDAD DE CUOTAS: {loan.Payments}</p>");
+                    sb.AppendLine("<hr/>");
                 }
             }
+            sb.AppendLine($"</body></html>");
             return sb.ToString();
         }
 
