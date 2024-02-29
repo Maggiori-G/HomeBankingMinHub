@@ -49,6 +49,8 @@ namespace HomeBankingMinHub.Controllers
                 return StatusCode(401,"No se pudo generar el resumen de cuenta");
 			}
 
+
+
             using (FileStream pdfFile = new FileStream(filePath,FileMode.Create))
             {
                 using (PdfWriter writer = new PdfWriter(pdfFile))
