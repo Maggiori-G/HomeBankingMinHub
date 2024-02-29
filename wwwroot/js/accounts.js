@@ -39,7 +39,18 @@ var app = new Vue({
                 this.errorMsg = error.response.data;  
                 this.errorToats.show();
             })
-        }        
+        },
+        download: function () {
+            if (confirm("Desea descargar un pdf con la informacion de su cuenta?")) {
+                axios.get('/api/clients/current/downloads')
+                    .then(response => window.location.reload())
+                    .catch((erros) => {
+                        this.errorMsg = error.response.data;
+                        this.errorToats.show();
+                    })
+            }
+
+        }
     },
     mounted: function () {
         this.errorToats = new bootstrap.Toast(document.getElementById('danger-toast'));
